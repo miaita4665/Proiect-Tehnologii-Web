@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
+import axios from 'axios'; 
 
 function SubmitPaper() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false); // Pentru a dezactiva butonul în timpul upload-ului
   const [formData, setFormData] = useState({
     title: '',
     abstract: '',
@@ -14,14 +18,51 @@ function SubmitPaper() {
     { id: 3, name: "Tech Summit București" }
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Articol propus:", formData);
-    alert("Articolul a fost încărcat cu succes! (Status: In Review)");
+    
+    // 1. Validare minima
+    if (!formData.file) {
+      alert("Te rugăm să selectezi un fișier PDF!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 2. Cream obiectul FormData (necesar pentru Multer din Backend)
+      const dataToSend = new FormData();
+      dataToSend.append('title', formData.title);
+      dataToSend.append('abstract', formData.abstract);
+      dataToSend.append('conferenceId', formData.conferenceId);
+      dataToSend.append('file', formData.file); // Numele 'file' trebuie să fie identic cu cel din backend: upload.single('file')
+
+      // 3. Luam token-ul de login (fara el, backend-ul ne va da 401 Unauthorized)
+      const token = localStorage.getItem('token');
+
+      // 4. Trimitem cererea către Backend
+      const response = await axios.post('http://localhost:5000/api/papers/upload', dataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log("Răspuns server:", response.data);
+      alert("Articolul a fost încărcat cu succes în Cloudinary!");
+      
+      // 5. Redirectionam utilizatorul către Dashboard
+      navigate('/');
+      
+    } catch (error) {
+      console.error("Eroare la upload:", error);
+      alert(error.response?.data?.message || "A apărut o eroare la încărcarea fișierului.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Stil comun pentru input-uri (ca să arate toate la fel)
-  const inputStyle = "w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition";
+  const inputStyle = "w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition";
   const labelStyle = "block font-bold mb-2 text-gray-700";
 
   return (
@@ -31,7 +72,6 @@ function SubmitPaper() {
       </h2>
       
       <form onSubmit={handleSubmit}>
-        {/* Titlu */}
         <div className="mb-5">
           <label className={labelStyle}>Titlul Lucrării</label>
           <input 
@@ -43,7 +83,6 @@ function SubmitPaper() {
           />
         </div>
 
-        {/* Selectare Conferință */}
         <div className="mb-5">
           <label className={labelStyle}>Alege Conferința</label>
           <select 
@@ -58,7 +97,6 @@ function SubmitPaper() {
           </select>
         </div>
 
-        {/* Abstract */}
         <div className="mb-5">
           <label className={labelStyle}>Abstract (Rezumat)</label>
           <textarea 
@@ -70,30 +108,23 @@ function SubmitPaper() {
           ></textarea>
         </div>
 
-        {/* Upload Fisier */}
         <div className="mb-8">
           <label className={labelStyle}>Încarcă PDF</label>
           <input 
             type="file" 
             accept=".pdf"
-            className="w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100
-              cursor-pointer border border-gray-300 rounded p-2 bg-gray-50"
+            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded p-2 bg-gray-50"
             onChange={(e) => setFormData({...formData, file: e.target.files[0]})}
             required
           />
-          <p className="text-xs text-gray-500 mt-1">Doar fișiere .pdf (Max 10MB)</p>
         </div>
 
         <button 
           type="submit" 
-          className="w-full bg-blue-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          disabled={loading}
+          className={`w-full ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-4 px-6 rounded-lg transition duration-200 shadow-md`}
         >
-          Trimite Propunerea
+          {loading ? "Se încarcă fișierul..." : "Trimite Propunerea"}
         </button>
       </form>
     </div>

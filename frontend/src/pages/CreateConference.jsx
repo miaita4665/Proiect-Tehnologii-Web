@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function CreateConference() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     date: '',
@@ -13,13 +17,33 @@ function CreateConference() {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Date conferință trimise:", formData);
-    alert("Conferința a fost creată (simulare)!");
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Trimitem datele către backend (verifică dacă ruta este corectă, ex: /api/conferences)
+      const response = await axios.post('http://localhost:5000/api/conferences', formData, {
+        headers: { 
+          'Authorization': `Bearer ${token}` 
+        }
+      });
+
+      console.log("Conferință creată:", response.data);
+      alert("Conferința a fost creată cu succes în baza de date!");
+      
+      // Redirecționăm organizatorul la Dashboard
+      navigate('/'); 
+    } catch (error) {
+      console.error("Eroare la crearea conferinței:", error);
+      alert(error.response?.data?.message || "Eroare la comunicarea cu serverul.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Stiluri comune (același design ca la SubmitPaper)
   const inputStyle = "w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition";
   const labelStyle = "block text-gray-700 font-bold mb-2";
 
@@ -30,7 +54,6 @@ function CreateConference() {
       </h2>
 
       <form onSubmit={handleSubmit}>
-        {/* Numele Conferinței */}
         <div className="mb-5">
           <label className={labelStyle}>Nume Conferință</label>
           <input
@@ -44,7 +67,6 @@ function CreateConference() {
           />
         </div>
 
-        {/* Data și Locația */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
             <label className={labelStyle}>Data</label>
@@ -71,7 +93,6 @@ function CreateConference() {
           </div>
         </div>
 
-        {/* Descriere */}
         <div className="mb-8">
           <label className={labelStyle}>Descriere</label>
           <textarea
@@ -84,12 +105,12 @@ function CreateConference() {
           ></textarea>
         </div>
 
-        {/* Buton Submit */}
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white font-bold py-4 px-4 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          disabled={loading}
+          className={`w-full ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-4 px-4 rounded-lg transition shadow-md`}
         >
-          Publică Conferința
+          {loading ? "Se salvează..." : "Publică Conferința"}
         </button>
       </form>
     </div>
