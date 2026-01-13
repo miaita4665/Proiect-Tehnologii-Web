@@ -8,13 +8,15 @@ exports.uploadPaper = async (req, res) => {
         const { title, conferenceId, authorId } = req.body;
 
         // 1. Creăm articolul
+        const fileUrl = req.file ? req.file.path : 'link_default.pdf';
+
         const newPaper = await Paper.create({
             title,
             conferenceId,
-            authorId,
+            authorId: req.user.id, 
             status: 'PENDING',
-            fileUrl: 'url_cloudinary_placeholder'
-        }, { transaction: t });
+            fileUrl: fileUrl 
+            }, { transaction: t });
 
         // 2. Căutăm utilizatorii care au rolul 'REVIEWER'
         const allReviewers = await User.findAll({ where: { role: 'REVIEWER' } });

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const paperController = require('../controllers/paperController');
-const authenticateToken = require('../middleware/authMiddleware'); // Import middleware
+const authenticateToken = require('../middleware/authMiddleware');
+const upload = require('../config/cloudinary'); // Import configurarea Cloudinary
 
-// Adaug authenticateToken inainte de funcția din controller
-router.post('/upload', authenticateToken, paperController.uploadPaper);
+// Adaugam middleware-ul upload.single('file') inainte de controller
+router.post('/upload', authenticateToken, upload.single('file'), paperController.uploadPaper);
 
 module.exports = router;
