@@ -28,3 +28,6 @@ sequelize.authenticate()
   .catch(err => console.error(' Eroare conexiune:', err));
 const paperRoutes = require('./routes/paperRoutes');
 app.use('/api/papers', paperRoutes);
+app.get('/', (req, res) => {
+  res.send('Bine ați venit la API-ul Sistemului de Conferințe!');
+});
