@@ -2,6 +2,7 @@ const { User } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+
 // --- INREGISTRARE ---
 exports.register = async (req, res) => {
     try {
@@ -33,14 +34,16 @@ exports.register = async (req, res) => {
 // --- LOGARE ---
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        
+        const email = req.body.email.trim();
+        const password = req.body.password.trim();
         console.log("JWT Secret din ENV:", process.env.JWT_SECRET);
         // Cautam userul
         const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
         }
-
+        
         // Verificam parola
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
