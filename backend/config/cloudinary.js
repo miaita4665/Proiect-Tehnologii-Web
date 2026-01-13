@@ -11,12 +11,11 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'conference_papers', // Numele folderului din Cloudinary
-    allowed_formats: ['pdf', 'doc', 'docx'],
-    resource_type: 'raw' // Important pentru PDF-uri
+    folder: 'conference_papers',
+    resource_type: 'auto', 
   },
 });
 
-const upload = multer({ storage: storage });
 
+const upload = multer({ storage: storage });
 module.exports = upload;

@@ -7,8 +7,18 @@ exports.uploadPaper = async (req, res) => {
     try {
         const { title, conferenceId, authorId } = req.body;
 
-        // 1. Creăm articolul
-        const fileUrl = req.file ? req.file.path : 'link_default.pdf';
+        // 1. Cream articolul
+        if (!req.file) {
+        return res.status(400).json({ 
+            message: "Fișierul nu a ajuns la server!",
+            debug_info: {
+                body: req.body,
+                headers: req.headers['content-type']
+            }
+        });
+    }
+
+    const fileUrl = req.file.path;
 
         const newPaper = await Paper.create({
             title,
@@ -18,19 +28,19 @@ exports.uploadPaper = async (req, res) => {
             fileUrl: fileUrl 
             }, { transaction: t });
 
-        // 2. Căutăm utilizatorii care au rolul 'REVIEWER'
+        // 2. Cautam utilizatorii care au rolul 'REVIEWER'
         const allReviewers = await User.findAll({ where: { role: 'REVIEWER' } });
 
         if (allReviewers.length < 2) {
             await t.rollback();
-            return res.status(400).json({ message: "Nu sunt suficienți recenzori în sistem!" });
+            return res.status(400).json({ message: "Nu sunt suficienti recenzori in sistem!" });
         }
 
         // 3. Logica de alocare: amestecăm lista și luăm primii 2 (Randomize)
         const shuffled = allReviewers.sort(() => 0.5 - Math.random());
         const selectedReviewers = shuffled.slice(0, 2);
 
-        // 4. Creăm alocările în tabelul Reviews
+        // 4. Cream alocările în tabelul Reviews
         // Pentru fiecare din cei 2 recenzori, facem o intrare
         const reviewAssignments = selectedReviewers.map(reviewer => {
             return {
@@ -42,11 +52,11 @@ exports.uploadPaper = async (req, res) => {
 
         await Review.bulkCreate(reviewAssignments, { transaction: t });
 
-        // Dacă totul a mers bine, salvăm modificările în baza de date
+        // Daca totul a mers bine, salvăm modificările în baza de date
         await t.commit();
 
         res.status(201).json({
-            message: "Articol încărcat și alocat automat celor 2 recenzori!",
+            message: "Articol incarcat și alocat automat celor 2 recenzori!",
             paperId: newPaper.id,
             allocatedTo: selectedReviewers.map(r => r.email)
         });
