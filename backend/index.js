@@ -1,4 +1,5 @@
 require('dotenv').config();
+const cloudinary=require('cloudinary').v2;
 const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database'); 
@@ -7,6 +8,11 @@ const authRoutes = require('./routes/authRoutes');
 const app = express();
 app.use(cors());
 app.use(express.json());
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+});
 
 const PORT = process.env.PORT || 5000;
 const conferenceRoutes = require('./routes/conferenceRoutes');
