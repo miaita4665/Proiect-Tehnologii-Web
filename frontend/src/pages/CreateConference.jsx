@@ -67,7 +67,7 @@ function CreateConference() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+        <div className="grid grid-cols-1 gap-5 mb-5">
           <div>
             <label className={labelStyle}>Data</label>
             <input
@@ -76,18 +76,6 @@ function CreateConference() {
               value={formData.date}
               onChange={handleChange}
               className={inputStyle}
-              required
-            />
-          </div>
-          <div>
-            <label className={labelStyle}>Locație</label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className={inputStyle}
-              placeholder="Ex: București / Online"
               required
             />
           </div>

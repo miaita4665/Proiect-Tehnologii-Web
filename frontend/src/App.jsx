@@ -3,8 +3,8 @@ import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import CreateConference from './pages/CreateConference';
-import SubmitPaper from './pages/SubmitPaper';     // <--- NOU
-import ReviewDashboard from './pages/ReviewDashboard'; // <--- NOU
+import SubmitPaper from './pages/SubmitPaper';     
+import ReviewDashboard from './pages/ReviewDashboard'; 
 
 function App() {
   return (
@@ -17,8 +17,8 @@ function App() {
           
           {/* Rute specifice */}
           <Route path="/create-conference" element={<CreateConference />} />
-          <Route path="/submit-paper" element={<SubmitPaper />} />       {/* <--- NOU */}
-          <Route path="/reviews" element={<ReviewDashboard />} />        {/* <--- NOU */}
+          <Route path="/submit-paper" element={<SubmitPaper />} />      
+          <Route path="/reviews" element={<ReviewDashboard />} />       
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

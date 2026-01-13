@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import axios from 'axios'; 
 
 function SubmitPaper() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false); // Pentru a dezactiva butonul în timpul upload-ului
+  const [loading, setLoading] = useState(false);
+  const [conferences, setConferences] = useState([]); // Aici stocăm conferințele din DB
+  
   const [formData, setFormData] = useState({
     title: '',
     abstract: '',
@@ -12,51 +14,46 @@ function SubmitPaper() {
     file: null
   });
 
-  const availableConferences = [
-    { id: 1, name: "Conferința de Robotică 2026" },
-    { id: 2, name: "Simpozionul de Medicină Avansată" },
-    { id: 3, name: "Tech Summit București" }
-  ];
+  // Încărcăm conferințele reale când se deschide pagina
+  useEffect(() => {
+    const fetchConferences = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/conferences');
+        setConferences(response.data);
+      } catch (err) {
+        console.error("Eroare la încărcarea conferințelor:", err);
+      }
+    };
+    fetchConferences();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Validare minima
     if (!formData.file) {
       alert("Te rugăm să selectezi un fișier PDF!");
       return;
     }
 
     setLoading(true);
-
     try {
-      // 2. Cream obiectul FormData (necesar pentru Multer din Backend)
       const dataToSend = new FormData();
       dataToSend.append('title', formData.title);
       dataToSend.append('abstract', formData.abstract);
       dataToSend.append('conferenceId', formData.conferenceId);
-      dataToSend.append('file', formData.file); // Numele 'file' trebuie să fie identic cu cel din backend: upload.single('file')
+      dataToSend.append('file', formData.file);
 
-      // 3. Luam token-ul de login (fara el, backend-ul ne va da 401 Unauthorized)
       const token = localStorage.getItem('token');
-
-      // 4. Trimitem cererea către Backend
-      const response = await axios.post('http://localhost:5000/api/papers/upload', dataToSend, {
+      await axios.post('http://localhost:5000/api/papers/upload', dataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log("Răspuns server:", response.data);
-      alert("Articolul a fost încărcat cu succes în Cloudinary!");
-      
-      // 5. Redirectionam utilizatorul către Dashboard
+      alert("Articolul a fost încărcat cu succes!");
       navigate('/');
-      
     } catch (error) {
-      console.error("Eroare la upload:", error);
-      alert(error.response?.data?.message || "A apărut o eroare la încărcarea fișierului.");
+      alert(error.response?.data?.message || "Eroare la încărcare.");
     } finally {
       setLoading(false);
     }
@@ -77,7 +74,7 @@ function SubmitPaper() {
           <input 
             type="text"
             className={inputStyle}
-            placeholder="Ex: Utilizarea AI în diagnosticarea..."
+            placeholder="Ex: Impactul AI în medicină..."
             onChange={(e) => setFormData({...formData, title: e.target.value})}
             required
           />
@@ -91,7 +88,8 @@ function SubmitPaper() {
             required
           >
             <option value="">-- Selectează o conferință --</option>
-            {availableConferences.map(conf => (
+            {/* Mapăm peste conferințele din baza de date, nu peste assignedPapers! */}
+            {conferences.map(conf => (
               <option key={conf.id} value={conf.id}>{conf.name}</option>
             ))}
           </select>
